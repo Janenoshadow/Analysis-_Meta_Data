@@ -1,7 +1,7 @@
-
 rm(list = ls())
-setwd("/Volumes/xiaowang/zhoushan/新分析/16S.23.11.1")
+setwd("/yourworkpath")
 
+#-----------------------------------------------------
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -13,28 +13,25 @@ library(vegan)
 library(corrplot)
 library(readxl)
 
+#Input-----------------------------------------------------
+#ASVtable <- read.table("ASVtable_raw.txt", header = TRUE, sep = "\t", row.names = 1,fill = TRUE)
 ASVtable <- read.table("taxonomy.txt", header = TRUE, sep = "\t", row.names = 1,fill = TRUE)
 
+#Discard
 exclude_categories <- c("D_4__Mitochondria", "D_3__Chloroplast")
 ASVtable <- ASVtable %>%
   rowwise() %>%  # 对每一行进行操作
-  filter(!any(c_across(c(Kingdom, Phylum, Order, Family, Genus, Class)) %in% exclude_categories))  # 如果行中任意一
-#ASVtable为去除线粒体和叶绿素等不应存在物种的表格
-
-
-#ASV rarefied 这一步是为了移除可能由于技术误差、污染或偶然事件产生的序列 <10,排除技术误差或污染等因素导致的后，再进行出现次数的计算筛选
-
+  filter(!any(c_across(c(Kingdom, Phylum, Order, Family, Genus, Class)) %in% exclude_categories))  # According to your database
+numeric_cols <- names(ASVtable)[sapply(ASVtable, is.numeric)]
 ASVtable1 <- ASVtable %>%
-  mutate(across(1:50, ~ifelse(. < 10, 0, .)))
+  mutate(across(where(is.numeric), ~ifelse(. < 10, 0, .))) #According to your own data
+ASVtable2 <- ASVtable1[rowSums(ASVtable1[, numeric_cols], na.rm = TRUE) > 0, ]
 
-ASVtable2 <- ASVtable1[rowSums(ASVtable1[, 1:50], na.rm = TRUE) > 0, ]
-
-ASVtable3 <- ASVtable2%>% select (1:50)
+ASVtable3 <- ASVtable2%>% select (numeric_cols)
 
 
-#本文需要用到的 R 包
-library(vegan)	#用于计算 Shannon 熵指数、Simpson 指数、Chao1 指数、ACE 指数等，同时用于抽样
-library(ggplot2)	#用于 ggplot2 作图
+library(vegan)	
+library(ggplot2)	
 library(doBy)	#用于分组统计
 library(ggalt)	#用于绘制拟合曲线
 
