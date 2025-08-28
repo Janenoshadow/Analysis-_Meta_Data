@@ -4,8 +4,8 @@ library(tidyr)
 source("/ieggrtools.r")
 #setwd("/yourworkpath")
 
-comm1 <- read.table("sequences_rarefied_20240222.txt", header = TRUE, sep = "\t", fill = TRUE,row.names = 1)
-comm_reduced <- comm1[,-(1:7)]
+comm1 <- read.table("ASVtable.txt", header = TRUE, sep = "\t", fill = TRUE,row.names = 1)
+comm_reduced <- comm1[,-(1:7)] #discard taxonomy data
 comm_transposed <- t(comm_reduced)
 comm <- as.data.frame(comm_transposed)
 treat <-read.table("sample-metadata_modified.txt", header = TRUE, sep = "\t", fill = TRUE,row.names = 1)#去除前8行以匹配数据
