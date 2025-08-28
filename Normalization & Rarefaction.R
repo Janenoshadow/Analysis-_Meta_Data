@@ -1,5 +1,5 @@
 rm(list = ls())
-setwd("/yourworkpath")
+#setwd("/yourworkpath")
 
 #-----------------------------------------------------
 library(dplyr)
