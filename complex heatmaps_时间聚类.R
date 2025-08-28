@@ -1,11 +1,13 @@
 
 rm(list = ls())
-setwd("E:/Zhoushan eDNA/新分析/diversity/16S/热图制作")
+#setwd("/yourwordpath")
+
 library(dplyr)
 library(ggplot2)
 library(stringr)
  
-df <- read.table("sequences_rarefied_20240222.txt", header = TRUE, sep = "\t",fill = TRUE)
+df <- read.table("ASVtable.txt", header = TRUE, sep = "\t",fill = TRUE)
+
 #计算相对丰度
 char_cols <- df %>% select(1:8)
 relative_abundance <- df %>% 
@@ -23,7 +25,6 @@ Order_sums <- Order_sums %>%
 
 Order_sums <- Order_sums %>%
   mutate(Order = str_replace_all(Order, "D_3__", ""))
-
 
 #这边就需要去除""空白内容了
 result_cleaned <- Order_sums %>%
@@ -73,9 +74,6 @@ Phylum_colors <- c(
   "Phylum13" = "#98df8a"
 )#, "Phylum14" = "#ff9896", "Phylum15" = "#c5b0d5", "Phylum16" = "#c49c94"
 names(Phylum_colors) <- unique(row_groups)
-
-
-
 
 # 宏转录组采样信息通过metadata添加？季节，采样月份的颜色
 metadata <- read.table("sample-metadata.txt", header = TRUE, sep = "\t",fill = TRUE)
@@ -193,6 +191,7 @@ Heatmap(df, name = "mtcars") +
 
 Heatmap(df, name = "mtcars") +
   Heatmap(annot_df , name = "type", width = unit(5, "mm"))
+
 
 
 
