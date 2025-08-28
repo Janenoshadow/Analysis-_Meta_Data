@@ -163,7 +163,7 @@ metadata$Group <- as.factor(metadata$Group)
 OTUtable <- read.table("ASVtable.txt", header = TRUE, sep = "\t",fill = TRUE)
 
 otu <- OTUtable %>%
-  select(9:58)#discard taxonomy annotation
+  select(9:58)#discard taxonomy annotation according your own data
 otu1 <- t(otu)
 otu <- otu1
 alpha_div <- alpha_diversity(otu)
@@ -173,17 +173,17 @@ shannon_diversity <- alpha_div[,4]
 simpson_diversity <- alpha_div[,5]
 
 str(shannon_diversity)
+sink("shapiro_test_results.txt")
 shannon_diversity <- as.numeric(shannon_diversity)
 simpson_diversity <- as.numeric(simpson_diversity)
 shapiro.test(shannon_diversity)
 shapiro.test(simpson_diversity)
+sink()
 #------------------------------Visualization-------------------------------------------------------
 #alpha_div = read.table("alpha_diversity.txt", header=T, row.names=1, sep="\t")
-metadata$Group = factor(metadata$Group, levels = c("Nov 2021","Jan 2022","May 2022","Jul 2022","Sep 2022","Nov 2022","Jan 2023","Mar 2023","Jun 2023"))
+metadata$Group = factor(metadata$Group, levels = c("Nov 2021","Jan 2022","May 2022","Jul 2022","Sep 2022","Nov 2022","Jan 2023","Mar 2023","Jun 2023"))#according your category
 (p = alpha_boxplot1(alpha_div, metadata, "shannon","Group",facet_name = "shannon"))
-#metadata$Group = factor(metadata$Group, levels = c("2111","2201","2205","2207","2209","2211","2301","2303","2306"))
-(p1 = alpha_boxplot1(alpha_div, metadata, "simpson", "Group",facet_name = "simpson"))
-#metadata$Group = factor(metadata$Group, levels = c("2111","2201","2205","2207","2209","2211","2301","2303","2306"))
+#metadata$Group = factor(metadata$Group, levels = c("Nov 2021","Jan 2022","May 2022","Jul 2022","Sep 2022","Nov 2022","Jan 2023","Mar 2023","Jun 2023"))#according your category
 (p2 = alpha_boxplot1(alpha_div, metadata, "Chao1", "Group",facet_name = "Chao1"))
 
 ggsave(paste0("Gouqi shannon.svg"), p, width=140, height=90, units="mm")
