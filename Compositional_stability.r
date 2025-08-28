@@ -1,8 +1,8 @@
 # contributor: Daliang Ning
 rm(list = ls())
 library(tidyr)
-source("/Volumes/xiaowang/zhoushan/新分析/diversity/16S/stability/ieggrtools.r")
-setwd("/Volumes/xiaowang/zhoushan/新分析/diversity/16S/stability")
+source("/ieggrtools.r")
+#setwd("/yourworkpath")
 
 comm1 <- read.table("sequences_rarefied_20240222.txt", header = TRUE, sep = "\t", fill = TRUE,row.names = 1)
 comm_reduced <- comm1[,-(1:7)]
