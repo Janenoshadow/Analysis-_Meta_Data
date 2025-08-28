@@ -1,27 +1,45 @@
 rm(list = ls())
-setwd("/Volumes/xiaowang/zhoushan/新分析/diversity/16S/α-diversity")
+#setwd("/your_workpath")
+
+#load Rpackage
 library(vegan)
 library(picante)
 library(ggplot2)
 library(dplyr)
+library(multcompView)
+
+#Set_function     This function is coded by Rpackage "amplicon"
+#---------------------------------------------------------------------------------------------------------------------
+alpha_diversity <- function(x, tree = NULL) {
+  observed_species <- estimateR(x)[1, ]
+  Chao1 <- estimateR(x)[2, ]
+  ACE <- estimateR(x)[4, ]
+  shannon <- diversity(x, index = 'shannon',base = 2)
+  simpson <- diversity(x, index = 'simpson')    #注意，这里是Gini-Simpson 指数
+  goods_Coverage <- 1 - rowSums(x == 1) / rowSums(x)
+  
+  #保留四位小数
+  shannon <- sprintf("%0.4f", shannon)
+  simpson <- sprintf("%0.4f", simpson)
+  goods_Coverage <- sprintf("%0.4f", goods_Coverage)
+  
+  
+  result <- data.frame(observed_species, ACE,Chao1, shannon, simpson, goods_Coverage)
+  
+  if (!is.null(tree)) {
+    PD_whole_tree <- pd(x, tree, include.root = FALSE)[1]
+    names(PD_whole_tree) <- 'PD_whole_tree'
+    result <- cbind(result, PD_whole_tree)
+    
+    result <- data.frame(observed_species, ACE,Chao1, Shannon, Simpson,
+                         PD_whole_tree ,goods_Coverage)
+  }
+  result
+}
 
 alpha_boxplot1 <- function(alpha_div, metadata, index = "richness", groupID = "Group",facet_name = "richness",
                            outlier = TRUE
 ) {
-  # 依赖关系检测与安装
-  p_list = c("ggplot2", "dplyr", "multcompView") # "agricolae"
-  for(p in p_list){
-    if (!requireNamespace(p)){
-      install.packages(p)}
-    suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
-  }
-  
-  # 测试默认参数
-  # library(amplicon)
-  # index = "richness"
-  # groupID = "Group"
-  # metadata = read.table("metadata2.txt", header=T, row.names=1, sep="\t", comment.char="", stringsAsFactors = F)
-  # metadata = subset(metadata, Group %in% c("KO","OE"))
   
   # 交叉筛选
   idx = rownames(metadata) %in% rownames(alpha_div)
@@ -134,24 +152,39 @@ alpha_boxplot1 <- function(alpha_div, metadata, index = "richness", groupID = "G
   
 }
 
-
+#Input your own data
+#-----------------------------------Alpha_diversity_calculation------------------------------------
 metadata = read.table("sample-metadata_new.txt", header=T, row.names=1, sep="\t", comment.char="", stringsAsFactors = F)
 # 预览元数据前3行，注意分组列名
 head(metadata, n = 3)
 # 将Group列转换为因子类型
 metadata$Group <- as.factor(metadata$Group)
 
-alpha_div = read.table("16Salpha_diversity.txt", header=T, row.names=1, sep="\t", comment.char="")
+OTUtable <- read.table("ASVtable.txt", header = TRUE, sep = "\t",fill = TRUE)
 
+otu <- OTUtable %>%
+  select(9:58)#discard taxonomy annotation
+otu1 <- t(otu)
+otu <- otu1
+alpha_div <- alpha_diversity(otu)
+write.table(alpha_div, "alpha_diversity.txt", sep = "\t", quote = FALSE, row.names = TRUE,col.names = TRUE)
+#---------------------------------Test of normal distribution--------------------------------------
+shannon_diversity <- alpha_div[,4]
+simpson_diversity <- alpha_div[,5]
+
+str(shannon_diversity)
+shannon_diversity <- as.numeric(shannon_diversity)
+simpson_diversity <- as.numeric(simpson_diversity)
+shapiro.test(shannon_diversity)
+shapiro.test(simpson_diversity)
+#------------------------------Visualization-------------------------------------------------------
+#alpha_div = read.table("alpha_diversity.txt", header=T, row.names=1, sep="\t")
 metadata$Group = factor(metadata$Group, levels = c("Nov 2021","Jan 2022","May 2022","Jul 2022","Sep 2022","Nov 2022","Jan 2023","Mar 2023","Jun 2023"))
 (p = alpha_boxplot1(alpha_div, metadata, "shannon","Group",facet_name = "shannon"))
 #metadata$Group = factor(metadata$Group, levels = c("2111","2201","2205","2207","2209","2211","2301","2303","2306"))
 (p1 = alpha_boxplot1(alpha_div, metadata, "simpson", "Group",facet_name = "simpson"))
 #metadata$Group = factor(metadata$Group, levels = c("2111","2201","2205","2207","2209","2211","2301","2303","2306"))
 (p2 = alpha_boxplot1(alpha_div, metadata, "Chao1", "Group",facet_name = "Chao1"))
+
 ggsave(paste0("Gouqi shannon.svg"), p, width=140, height=90, units="mm")
-ggsave(paste0("Gouqi shannon.png"), p, width=140, height=90, units="mm")
 ggsave(paste0("Gouqi simpson.svg"), p1, width=140, height=90, units="mm")
-ggsave(paste0("Gouqi simpson.png"), p1, width=140, height=90, units="mm")
-ggsave(paste0("Gouqi Chao1.svg"), p2, width=140, height=90, units="mm")
-ggsave(paste0("Gouqi Chao1.png"), p2, width=140, height=90, units="mm")
